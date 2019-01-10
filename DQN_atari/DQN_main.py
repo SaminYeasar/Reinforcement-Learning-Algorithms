@@ -7,7 +7,7 @@ from utils import plotLearning
 #def trunc_image(observation):
 #	return np.mean(observation[15:200, 30:125], axis=2)
 def preprocess(img):
-    return np.mean(img[::2,::2], axis=2).astype(np.uint8)
+	return np.mean(img[::2,::2], axis=2).astype(np.uint8)
 
 if __name__ == '__main__':
 	env = gym.make('SpaceInvaders-v0')

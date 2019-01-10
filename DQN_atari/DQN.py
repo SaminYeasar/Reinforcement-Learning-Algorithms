@@ -153,41 +153,53 @@ class Agent(object):
 		##########################
 
 		# sample Mini-Batch
+
+		"""
 		if self.memCounter + batch_size < self.memSize:
 			memStart = int(np.random.choice(range(self.memCounter)))
 		else:
 			memStart = int(np.random.choice(range(self.memSize - batch_size - 1)))
 
 		miniBatch = self.memory[memStart:memStart + batch_size]
-		memory = np.array(miniBatch)
-
-		# memory = sample_miniBatch(self, batch_size)
+		sampled_memory = np.array(miniBatch)
+		"""
+		sampled_memory = self.sample_miniBatch(batch_size)
+		# print('shape of memory',memory.shape)
+		# shape (batch_size ,number of saved input  )
+		#        batch_size = 32
+		#        number of saved input = 4 ; state,action,reward,next_state
+		#        shape of sampled_memory[:,0][0] = (105,80) it's an image input
 
 		# convert numpy array to list as pytorch doesn't take numpy array
-		# memory[:,0][:] all rows(entire batch) , zero'th element(state) and all of the pixels
+		# sampled_memory[:,0][:] all rows(entire batch) , zero'th element(state) and all of the pixels
 		# send it to device
 		# (state,action,reward,state_)
 
 		###################
 		# Feed-forward :
 		####################
-		Qpred = self.Q_eval.forward(list(memory[:, 0][:])).to(self.Q_eval.device)
-		Qnext = self.Q_next.forward(list(memory[:, 3][:])).to(self.Q_eval.device)
+
+		# importance of listing here: if we don't convert into list,
+		# it gives error when we "torch.Tensor" at "forward"
+		Qpred = self.Q_eval.forward( list(sampled_memory[:, 0][:]) ).to(self.Q_eval.device)
+		Qnext = self.Q_next.forward( list(sampled_memory[:, 3][:]) ).to(self.Q_eval.device)
 
 		# output of Qnext if probaility matrix of actions, where column is different actions for different batch along the row
 		maxA = torch.argmax(Qnext, dim=1).to(self.Q_eval.device)
-		reward = torch.Tensor(list(memory[:, 2])).to(self.Q_eval.device)
+		reward = torch.Tensor(list(sampled_memory[:, 2])).to(self.Q_eval.device)
 		Qtarget = Qpred
 		Qtarget[:, maxA] = reward + self.GAMMA * torch.max(Qnext[1])
 
+		"""
 		# Update epsilon
 		if self.steps > 500:
 			if self.EPSILON - 1e-4 > self.minEPSILON:
 				self.EPSILON -= 1e-4
 			else:
 				self.EPSILON = self.minEPSILON
-
-		# self.update_epsilon()
+		"""
+		# update epsilon
+		self.update_epsilon()
 
 		##################
 		# Compute loss:
@@ -218,8 +230,7 @@ class Agent(object):
 		if self.memCounter + batch_size < self.memSize:
 			memStart = int(np.random.choice(range(self.memCounter)))
 		else:
-			memStart = int(np.random.choice(range(self.memCounter - batch_size - 1)))
+			memStart = int(np.random.choice(range(self.memSize - batch_size - 1)))
 
 		miniBatch = self.memory[memStart:memStart + batch_size]
-		memory = np.array(miniBatch)
-		return memory
+		return np.array(miniBatch)
