@@ -220,7 +220,9 @@ class Agent(object):
 		action 		= list(sampled_memory[:, 1][:])
 		reward		= list(sampled_memory[:, 2][:])
 		next_state	= list(sampled_memory[:, 3][:])
+		done        = list(sampled_memory[:, 4][:])
 
+		
 		###################
 		# Feed-forward :
 		####################
@@ -247,7 +249,7 @@ class Agent(object):
 		
 		"""
 		# shape (batch_size = 32 ,possible actions  = 6)
-		Qnext =  self.target_net.forward(next_state).detach() # detach from graph, don't backpropagate
+		Qnext = self.target_net.forward(next_state).detach() # detach from graph, don't back-propagate
 
 		# output of Qnext if probaility matrix of actions, where column is different actions for different batch along the row
 		#maxA = torch.argmax(Qnext, dim=1).to(self.policy_net.device)
@@ -258,6 +260,11 @@ class Agent(object):
 		Qtarget = reward + self.GAMMA*Qnext.max(1)[0] # consider the Qnext values that gives [ max_a Q(s',a) ]
 		# shape (batch_size,1)
 		Qtarget = Qtarget.unsqueeze(1)
+
+		# when done==True (terminal state) : Qtarget = reward
+		mask = [i for i, x in enumerate(done) if x]
+		if len(mask) > 1:
+			Qtarget[mask] = reward[mask].view(-1,1)
 
 
 

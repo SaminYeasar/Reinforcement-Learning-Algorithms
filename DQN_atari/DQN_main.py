@@ -74,7 +74,8 @@ if __name__ == '__main__':
 			frames.append(preprocess(observation_))
 
 			if done:
-				reward = - 100
+				reward = - 100  # otherwise gives zero; we want to give higher negative
+
 
 			#learner.storeTransition(trunc_image(observation), action, reward, trunc_image(observation_))
 			buffer_.storeTransition(preprocess(observation), action, reward, preprocess(observation_),done)
