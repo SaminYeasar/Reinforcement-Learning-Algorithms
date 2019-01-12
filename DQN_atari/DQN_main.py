@@ -1,5 +1,5 @@
 import gym
-from DQN import DeepQNetwork, Agent
+from DQN import DeepQNetwork, Agent , Replay_Buffer
 import numpy as np
 from utils import plotLearning
 
@@ -13,9 +13,10 @@ if __name__ == '__main__':
 	env = gym.make('SpaceInvaders-v0')
 	print('No of possible action = {}'.format(env.action_space.n))
 	# print('Dimension of observation space = {}'.format(env.observation_space.n))
-	learner = Agent(env, maxMemorySize=500, alpha=0.003, epsilon=1.0, minEpsilon=0.5, gamma=0.95, replace=None)
+	learner = Agent(env, maxMemorySize=500, alpha=0.003, epsilon=1.0, minEpsilon=0.5, gamma=0.95, replace=1000)
+	buffer_ = Replay_Buffer(maxMemorySize=500)
 
-	while learner.memCounter < learner.memSize:
+	while buffer_.memCounter < buffer_.memSize:
 		observation = env.reset()
 		done = False
 		while not done:
@@ -33,7 +34,7 @@ if __name__ == '__main__':
 			# store (s,a,r,s')
 			#learner.storeTransition(trunc_image(observation), action, reward, trunc_image(observation_))
 
-			learner.storeTransition(preprocess(observation), action, reward, preprocess(observation_))
+			transition = buffer_.storeTransition(preprocess(observation), action, reward, preprocess(observation_),done)
 
 			# state = next_state
 			observation = observation_
@@ -76,10 +77,11 @@ if __name__ == '__main__':
 				reward = - 100
 
 			#learner.storeTransition(trunc_image(observation), action, reward, trunc_image(observation_))
-			learner.storeTransition(preprocess(observation), action, reward, preprocess(observation_))
+			buffer_.storeTransition(preprocess(observation), action, reward, preprocess(observation_),done)
 
 			observation = observation_
-			learner.learn(batch_size)
+			sampled_memory = buffer_.sample_miniBatch(batch_size)
+			learner.learn(sampled_memory)
 			lastAction = action
 
 		# env.render()
