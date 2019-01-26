@@ -42,7 +42,7 @@ class Disciminator(nn.Module):
 		return prob
 
 	def expert_reward(self,state_action):
-		return -np.log(self.forward(state_action).cpu().data.numpy())
+		return -torch.log(self.forward(state_action))
 
 
 #############################################################################
@@ -76,8 +76,15 @@ class Policy(nn.Module):
 		x = torch.relu(self.fc1(state))
 		x = torch.relu(self.fc2(x))
 		action = torch.tanh(self.fc3(x)) * self.max_action   #"""didn't get the logic"""
+		#action_prob = torch.softmax(self.fc3(x), dim=1)
+		# will return probability of taking particular action
 		return action
-
+	"""
+	def select_action(self, state):
+		action_prob = self.forward(state)
+		action = action_prob.multinomial(1) # will select the most probable action
+		return action
+	"""
 ###############################################################################
 
 class GAIL(object):
@@ -104,7 +111,7 @@ class GAIL(object):
 
 	""" for a given state to GAIL provide learnt action"""
 	def select_action(self, state):
-		state = torch.FloatTensor(state).to(device)
+		state = torch.FloatTensor(state).to(device) #.reshape(1,-1)
 		action = self.policy.forward(state)
 		# check of it's true cause it's different than main code
 		# also check input output dimension
@@ -144,19 +151,19 @@ class GAIL(object):
 			###########################
 			# (2) Feed to discriminator
 			###########################
-			expert_d = self.discriminator.forward(torch.cat([expert_state,expert_action], dim=1) )
-			policy_d = self.discriminator.forward(torch.cat([policy_state,policy_action], dim=1) )
+			expert_d = self.discriminator.forward(torch.cat([expert_state, expert_action], dim=1))
+			policy_d = self.discriminator.forward(torch.cat([policy_state, policy_action], dim=1))
 
 			###################
 			# (3) Compute GAIL loss
 			###################
 			# binary_cross_entropy_with_logits (input, target):
-			expert_loss = self.discriminator.loss_func(expert_d, torch.ones(expert_d.size()).to(device), reduction = 'sum' )
-			policy_loss = self.discriminator.loss_func(policy_d, torch.zeros(policy_d.size()).to(device), reduction ='sum' )
+			expert_loss = self.discriminator.loss_func(expert_d, torch.ones(expert_d.size()).to(device), reduction='sum')
+			policy_loss = self.discriminator.loss_func(policy_d, torch.zeros(policy_d.size()).to(device), reduction='sum')
 
 			gail_loss = expert_loss + policy_loss
 
-			if (itr+1) == n_itr:
+			if (itr+1) == 1:
 				print('---------------------------------------------------------------------')
 				print('Expert loss = {} | Policy loss = {}'.format(expert_loss, policy_loss))
 				print('Expert Prob = {} | Policy prob = {}'.format(torch.mean(expert_d).detach().numpy(), torch.mean(policy_d).detach().numpy()))
@@ -172,11 +179,16 @@ class GAIL(object):
 			#################################################
 			# (5) Update Policy weight using back-propagation
 			#################################################
+
+
 			#policy_d = self.discriminator.forward(torch.cat([policy_state, policy_action], dim=1))
-			#policy_loss = self.discriminator.loss_func(policy_d, torch.zeros(policy_d.size()).to(device),reduction='sum')
+			# use loss function from discriminator but
+			# policy want to be line expert thus compare with torch.ones to get the loss
+			policy_loss =  self.discriminator.loss_func(policy_d, torch.ones(policy_d.size()).to(device),reduction='sum')
 			""" CORRECT THIS : original paper updated based on expert_reward function will implement later"""
-			#reward = self.discriminator.expert_reward(torch.cat([policy_state, policy_action]), dim=1)
+			#reward = self.discriminator.expert_reward(torch.cat([policy_state, policy_action], dim=1))
 			self.policy.optimizer.zero_grad()
+			#reward.backward()
 			policy_loss.backward()
 			self.policy.optimizer.step()
 
