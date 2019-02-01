@@ -7,5 +7,5 @@ ________________________________________________________________________________
 
 ## GIF
 
-
+Environment Details: https://github.com/openai/gym/wiki/BipedalWalker-v2
 ![](https://github.com/SaminYeasar/Reinforcement-Learning-Algorithms/blob/master/GAIL/GAIL_deterministic_PolicyNN/BipedalWalker-v2/BipedalWalker_v2.gif)
