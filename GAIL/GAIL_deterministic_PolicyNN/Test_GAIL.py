@@ -1,6 +1,8 @@
 """ To save video run the following command"""
 # xvfb-run -s "-screen 0 640x480x24" python Test_GAIL.py
 # link: https://hub.packtpub.com/openai-gym-environments-wrappers-and-monitors-tutorial/
+""" can use the following link to convert to gif as well but haven't tried."""
+# link: https://github.com/patrickmineault/xcorr-notebooks/blob/master/Render%20OpenAI%20gym%20as%20GIF.ipynb
 
 import gym
 import torch
@@ -38,6 +40,7 @@ def test():
 	if record_runs ==True and not os.path.exists(env_name):
 		env = gym.wrappers.Monitor(env, directory='{}/'.format(env_name), force=True, write_upon_reset=True)
 
+
 	state_dim = env.observation_space.shape[0]
 	action_dim = env.action_space.shape[0]
 	""" don't know why we need this"""
@@ -64,6 +67,8 @@ def test():
 		reward_per_run = 0
 		while not done:
 			env.render()
+			frames.append(env.render(mode='rgb_array'))
+
 			""" we don't need to store state,"""
 			# take action using policy
 			action = Policy.select_action(state)
@@ -81,6 +86,9 @@ def test():
 				break
 		print("Reward for {} run is {}".format(trial, reward_per_run) )
 		total_reward += reward_per_run
+
+
+
 	avg_reward = int(total_reward/n_eval_trials)
 	print("Avg Reward: {}".format(avg_reward))
 	#monitor.close()
