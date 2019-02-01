@@ -1,4 +1,4 @@
-# Reinforcement-Learning-Algorithms
+# GAIL Implementation:
 
 
 ## GIF
