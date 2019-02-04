@@ -80,8 +80,8 @@ class GAIL(object):
 			###########################
 			# (2) Feed to discriminator
 			###########################
-			expert_d = self.discriminator.forward(torch.cat([expert_state, expert_action], dim=1))
-			policy_d = self.discriminator.forward(torch.cat([policy_state, policy_action], dim=1))
+			expert_d = self.discriminator(torch.cat([expert_state, expert_action], dim=1))
+			policy_d = self.discriminator(torch.cat([policy_state, policy_action], dim=1))
 
 			###################
 			# (3) Compute GAIL loss
@@ -98,7 +98,7 @@ class GAIL(object):
 			if (itr+1) == 1:
 				print('---------------------------------------------------------------------')
 				print('Expert loss = {} | Policy loss = {}'.format(expert_loss, policy_loss))
-				print('Expert Prob = {} | Policy prob = {}'.format(torch.mean(expert_d).detach().numpy(), torch.mean(policy_d).detach().numpy()))
+				print('Expert Prob = {} | Policy prob = {}'.format(torch.sigmoid(torch.mean(expert_d)).detach().numpy(), torch.sigmoid(torch.mean(policy_d)).detach().numpy()))
 			########################################################
 			# (4) Update discriminator weight using back-propagation
 			########################################################
@@ -117,6 +117,15 @@ class GAIL(object):
 			# use loss function from discriminator but
 			# policy want to be line expert thus compare with torch.ones to get the loss
 			policy_loss = (self.discriminator.loss_func(policy_d, torch.ones(policy_d.size()).to(device),reduction='sum'))
+
+			#########################################
+			if (itr + 1) == 1:
+				print('---------------------------------------------------------------------')
+
+				print('| Policy loss = {}'.format(policy_loss))
+			########################################################
+
+
 			""" CORRECT THIS : original paper updated based on expert_reward function will implement later"""
 			#reward = self.discriminator.expert_reward(torch.cat([policy_state, policy_action], dim=1))
 			self.policy.optimizer.zero_grad()

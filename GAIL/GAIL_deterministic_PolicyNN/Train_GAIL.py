@@ -2,6 +2,11 @@ import gym
 import torch
 from GAIL import GAIL
 
+
+
+
+
+
 def train():
 	###################
 	# define parameters
@@ -9,7 +14,7 @@ def train():
 
 	env_name = "BipedalWalker-v2"
 	# env_name = "LunarLanderContinuous-v2"
-	solved_reward = 200
+	solved_reward = 300
 	lr = 0.0002       # learning rate  $ Make it adaptive with iteration$
 	beta_init = 0.5   # parameter for Adam optimizer
 
@@ -38,7 +43,7 @@ def train():
 	###########################
 	# Look for PreTrained Model
 	###########################
-	LookForPreTrainedModel = True
+	LookForPreTrainedModel = False
 	if LookForPreTrainedModel == True:
 		Policy.load()
 
@@ -53,7 +58,6 @@ def train():
 		###########################
 		""" after each n_itr we evaluate our learnt policy"""
 		Policy.update(n_itr, batch_size)
-
 
 		########################################
 		# evaluate updated policy in environment

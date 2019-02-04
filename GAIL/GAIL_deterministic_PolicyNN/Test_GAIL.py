@@ -67,8 +67,6 @@ def test():
 		reward_per_run = 0
 		while not done:
 			env.render()
-			frames.append(env.render(mode='rgb_array'))
-
 			""" we don't need to store state,"""
 			# take action using policy
 			action = Policy.select_action(state)
