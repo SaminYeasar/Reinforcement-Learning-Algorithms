@@ -140,32 +140,9 @@ def REINFORCE():
                 print("Saving the best found policy")
 
 
-
-            #score.append(total_reward)
-        """
-        if i_episode % args.log_interval == 0:
-            print('Episode {}\tLast length: {:5d}\tAverage length: {:.2f} \tTotal Reward{}'.format(
-                i_episode, t, running_reward, total_reward))
-            score.append(total_reward)
-        
-        if running_reward > env.spec.reward_threshold:
-            print("Solved! Running reward is now {} and "
-                  "the last episode runs to {} time steps!".format(running_reward, t))
-            break
-        """
-    #plt.plot(np.array(store)[0:, 1])
-    #plt.show()
-    """
-    # save learnt rewards and weights
-    keys = ["Iteration", "Total_Reward"]
-    utils.save_results(store, args, keys)
-    utils.save_weights(policy, args)
-
-    
-    """
     # save learnt rewards over episodes
     keys = ["Iteration", "Total_Reward"]
-    utils.save_results(store, args, keys)
+    utils.save_results(store, args, keys, session='Training')
 
 
     # test run
