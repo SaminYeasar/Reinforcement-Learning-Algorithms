@@ -59,8 +59,8 @@ class Policy(nn.Module):
         self.optimizer.zero_grad()
         episodic_loss.backward()
         self.optimizer.step()
-        del self.rewards[:]
-        del self.saved_log_probs[:]
+        #del self.rewards[:]
+        #del self.saved_log_probs[:]
 
     def select_action(self, state):
         state = torch.from_numpy(state).float().unsqueeze(0)
@@ -68,8 +68,8 @@ class Policy(nn.Module):
         """sample A_t ~ policy"""
         m = Categorical(probs)
         action = m.sample()
-        self.saved_log_probs.append(m.log_prob(action))
-        return action.item()
+        log_probs = m.log_prob(action)
+        return action.item(), log_probs
 
 
 def compute_episodic_loss(policy, args):
@@ -94,6 +94,9 @@ def compute_episodic_loss(policy, args):
 
     # Comment: We could try for mean as well
     policy_loss = torch.cat(policy_loss).sum()
+
+    del policy.rewards[:]
+    del policy.saved_log_probs[:]
     return policy_loss
 
 
@@ -108,15 +111,20 @@ def REINFORCE():
 
     #running_reward = 10
     store = []
+    eval_store = []
     for i_episode in range(args.max_itr):
         state = env.reset()
         total_reward = 0
         for t in range(10000):  # Don't infinite loop while learning
-            action = policy.select_action(state)
+            action, action_log_prob = policy.select_action(state)
             state, reward, done, _ = env.step(action)
             if args.render:
                 env.render()
+
+            # store results to compute discounted reward
+            policy.saved_log_probs.append(action_log_prob)
             policy.rewards.append(reward)
+
             total_reward += reward
             if done:
                 break
@@ -132,17 +140,22 @@ def REINFORCE():
         if i_episode % args.log_interval == 0:
             print('Episode {}\tLast length: {:5d} \tTotal Reward: {}'.format(
                 i_episode, t, total_reward))
-
+            """
             if total_reward > policy.best_policy_reward:
                 policy.best_policy_reward = total_reward
                 # save learnt and weights
                 utils.save_weights(policy, args)
                 print("Saving the best found policy")
+            """
+        if i_episode % 100 == 0:
+            eval_score = utils.eval(env, policy, args)
+            eval_store.append([i_episode, eval_score])
 
 
     # save learnt rewards over episodes
     keys = ["Iteration", "Total_Reward"]
     utils.save_results(store, args, keys, session='Training')
+    utils.save_results(eval_store, args, keys, session='Evaluation')
 
 
     # test run

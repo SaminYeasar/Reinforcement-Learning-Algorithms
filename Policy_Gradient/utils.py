@@ -54,7 +54,7 @@ def plot_graph(results, dir):
     plt.ylabel("Reward")
     plt.legend()
     plt.savefig('{}.svg'.format(dir), format='svg', dpi=1200)
-    #plt.show()
+    plt.close()
 
 def test(policy, args):
     load_weights(policy, args)
@@ -62,17 +62,17 @@ def test(policy, args):
     if not os.path.exists(args.env_name):
         env = gym.wrappers.Monitor(env, directory='./Results/{}/{}'.format(args.algo, args.env_name), force=True, write_upon_reset=True)
 
-    for i_episode in range(100):
+    for i_episode in range(10):
         state = env.reset()
         done = False
         total_reward = 0
         while not done:  # Don't infinite loop while learning
             env.render()
-            action = policy.select_action(state)
+            action, action_log_prob = policy.select_action(state)
             state, reward, done, _ = env.step(action)
             total_reward += reward
         print('Iteration = {} \t Total Reward = {}'.format(i_episode,total_reward))
-
+    env.close()
 
 def eval(env, policy, args):
     score = 0
@@ -82,13 +82,13 @@ def eval(env, policy, args):
         total_reward = 0
         while not done:  # Don't infinite loop while learning
             #env.render()
-            action = policy.select_action(state, sess='eval')
+            action, action_log_prob = policy.select_action(state)
             state, reward, done, _ = env.step(action)
             total_reward += reward
         score += total_reward
     score /= i_episode
-    if score > policy.best_policy_reward:
-        policy.best_policy_reward = score
-        save_weights(policy, args)
-        print("Saving the best found policy")
+    #if score > policy.best_policy_reward:
+    #    policy.best_policy_reward = score
+    #    save_weights(policy, args)
+    #    print("Saving the best found policy")
     return score
